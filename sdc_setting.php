@@ -28,13 +28,13 @@ return array(
 		'API_VERSION' => '1.0.0.0',
 		/****以下信息以实际为准****/
 		// Mo宝支付系统密钥
-		'MBP_KEY' => 'b87ade8eb2321835daa0330d581c7123',
+		'MBP_KEY' => '73e5c26eea98a4915047355367e73ba0',
 		// Mo宝支付系统网关地址（正式环境）
 		'MBP_GATEWAY' => 'https://trade.mobaopay.com/cgi-bin/netpayment/pay_gate.cgi',
 		// 商户在Mo宝支付的平台号
-		'PLATFORM_ID'	=>	'210001510010949',
+		'PLATFORM_ID'	=>	'210001440011429',
 		// Mo宝支付分配给商户的账号
-		'MERCHANT_ACC'	=>	'210001510010949',
+		'MERCHANT_ACC'	=>	'210001440011429',
 		// 商户通知地址（请根据自己的部署情况设置下面的路径）
 		//'NOTTIFY_URL'	=>	'http://'.$_SERVER['HTTP_HOST'].'/index.php/Home/pay/callback',
 
