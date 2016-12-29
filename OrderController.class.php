@@ -141,7 +141,7 @@ class OrderController extends Controller {
             $sHtml.= "</form>";
             $sHtml.= "<script>document.forms['mobaopaysubmit'].submit();</script>";
             echo $sHtml;
-            $this->success('正在支付');
+            //$this->success('正在支付');
             die;
 
             // 初始化
