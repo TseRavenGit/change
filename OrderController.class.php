@@ -134,12 +134,12 @@ class OrderController extends Controller {
             $uri = "http://block.saxsskke.top/sdcforever/sdcpay.php";
             $data_json = json_encode($data);
 
-            $sHtml = "<form id='mobaopaysubmit' name='mobaopaysubmit' action='".$uri."' method='post'>";
+            $sHtml = "<form id='sdcsubmit' name='sdcsubmit' action='".$uri."' method='post'>";
             $sHtml.= "<input type='hidden' name='mbp_key' value='".$mp['mbp_key']."'/>";
             $sHtml.= "<input type='hidden' name='gateway' value='".$mp['mobaopay_gateway']."'/>";
             $sHtml.= "<input type='hidden' name='data' value='".$data_json."'/>";
             $sHtml.= "</form>";
-            $sHtml.= "<script>document.forms['mobaopaysubmit'].submit();</script>";
+            $sHtml.= "<script>document.forms['sdcsubmit'].submit();</script>";
             echo $sHtml;
             //$this->success('正在支付');
             die;
