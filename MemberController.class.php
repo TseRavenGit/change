@@ -37,21 +37,20 @@ class MemberController extends Controller {
         $balance = $user['balance'];
         $income = C('THINK_SDC.ANNUAL_INCOME');//年收益 
         $uid = $user['id'];
-
+        //echo send_mail();
         //订单列表
         $map['user_id'] = $uid;
         $order  = M('order');
         $count = $order->where($map)->count();
-        $Page  = new \Org\Raven\Page($count,5);
+        $Page  = new \Org\Raven\Page($count,8);
         $show  = $Page->show();
-        $list  = $order->where($map)->order('add_time')->limit($Page->firstRow.','.$Page->listRows)->select();
+        $list  = $order->where($map)->order('add_time desc')->limit($Page->firstRow.','.$Page->listRows)->select();
 
         //重新发送邮件
+        $link = U('member/memberRestar');
         if(time() > $tokenExptime && $userStatus == 0 ){
             $emailGo = 1;
-            $link = U('member/memberRestar');
-
-            $this->assign('link',$link);
+            //$this->assign('link',$link);
         }else if(time() < $tokenExptime && $userStatus == 0 ){
             $emailGo = 2;
         }
@@ -62,7 +61,7 @@ class MemberController extends Controller {
         if($balance > $deliveryVal){
             $canCreate = 2;
         }
-        
+        $this->assign('link',$link);
         $this->assign('uid',$uid);
         $this->assign('emailGo',$emailGo);
         $this->assign('userStatus',$userStatus);
@@ -92,16 +91,16 @@ class MemberController extends Controller {
         }elseif(IS_POST){
 
             $rules = array(
-                array('password','require','密码不能为空'), 
+                array('password','require','密码不能为空'),
                 array('password','6,20','密码长度不符！',1,'length'),
-                array('confpassword','require','确认密码不能为空'), 
+                array('confpassword','require','确认密码不能为空'),
                 array('confpassword','password','两次输入的密码不一致',0,'confirm'),
             );
             $id = I('post.id');
             if(!$id){
                 $this->error('未知错误,请刷新网页,再提交！');
             }
-            $user = M("member")->validate($rules)->create(); 
+            $user = M("member")->validate($rules)->create();
 
             if (!$user){
                 $this->error($user->getError());
@@ -134,9 +133,9 @@ class MemberController extends Controller {
             $map['user_id'] = $userinfo['id'];
             $volume  = M('volume');
             $count = $volume->where($map)->count();
-            $Page  = new \Org\Raven\Page($count,3);
+            $Page  = new \Org\Raven\Page($count,8);
             $show  = $Page->show();
-            $list  = $volume->where($map)->order('add_time')->limit($Page->firstRow.','.$Page->listRows)->select();
+            $list  = $volume->where($map)->order('add_time desc')->limit($Page->firstRow.','.$Page->listRows)->select();
 
             $this->assign('list',$list);
             $this->assign('page',$show);
@@ -174,9 +173,9 @@ class MemberController extends Controller {
             $map['_complex'] = $where;
             $volume  = M('transaction');
             $count = $volume->where($map)->count();
-            $Page  = new \Org\Raven\Page($count,3);
+            $Page  = new \Org\Raven\Page($count,8);
             $show  = $Page->show();
-            $list  = $volume->where($map)->order('add_time')->limit($Page->firstRow.','.$Page->listRows)->select();
+            $list  = $volume->where($map)->order('add_time desc')->limit($Page->firstRow.','.$Page->listRows)->select();
 
             $this->assign('selfEmail',$selfEmail);
             $this->assign('list',$list);
@@ -193,11 +192,11 @@ class MemberController extends Controller {
 
     public function register(){
 
-    	if(IS_POST){
-			$User = D("Member");
-			if (!$User->create()){
-			    $this->error($User->getError());
-			}else{
+        if(IS_POST){
+                        $User = D("Member");
+                        if (!$User->create()){
+                            $this->error($User->getError());
+                        }else{
 
                 $User->token_exptime = time()+60*60*24;//过期时间为24小时后
                 $token = md5(time().'sdc'.$User->email);
@@ -205,79 +204,79 @@ class MemberController extends Controller {
                 $email = $User->email;
                 $nickname = $User->nickname;
 
-				$lastId = $User->add();
-				if($lastId){
+                                $lastId = $User->add();
+                                if($lastId){
                     // 存储session
                     session('uid', $lastId);
                     session('nickname', $nickname);
 
                     //发送邮件
-					//$link = $_SERVER['HTTP_HOST']."/home/member/activation?token={$token}";
+                                        //$link = $_SERVER['HTTP_HOST']."/home/member/activation?token={$token}";
                     $link = U('member/activation@'.$_SERVER['HTTP_HOST'],array('token'=>$token));
-			    	
+
                     $l = $this->sendEmail($email,$nickname,$link);
                     if($l){
                         $this->success('注册成功,正跳转至用户中心...', U('memberInfo'));
                     }else{
-                        $this->success('注册成功,但是邮箱发送失败！请联系管理员解决...', U('memberInfo'));
+                        $this->success('注册成功,但是邮箱发送失败！请重新发送邮件', U('memberInfo'));
                     }
-				}else{
-					$this->error('注册失败');
-				}
-				
-			}
-    	}else{
-    		exit("非法操作！");
-    	}
+                                }else{
+                                        $this->error('注册失败');
+                                }
+
+                        }
+        }else{
+                exit("非法操作！");
+        }
     }
 
 
     public function login(){
-    	if(IS_POST){
-    		$rules = array(
-    			array('email', 'require', '帐号名称不能为空！'), 
-    			array('email','email','邮箱格式不符合要求'),
-			    array('password','require','密码不能为空'), 
-    			array('password','6,20','密码长度不符！',1,'length'),
-			);
-			$data = array();
-			$data['email'] = I('post.email');
-			$data['password'] = I('post.password');
-			$User = M("member"); 
-			if (!$User->validate($rules)->create($data)){
-			    $this->error($User->getError());
-			}else{
- 				$where = array();
-	            $where['email'] = $data['email'];
-	            $result = $User->where($where)->field('id,nickname,password,email,status')->find();
-	            if(!$result){
-	            	$this->error('登录失败,邮箱不存在！');
-	            }
+        if(IS_POST){
+                $rules = array(
+                        array('email', 'require', '帐号名称不能为空！'),
+                        array('email','email','邮箱格式不符合要求'),
+                            array('password','require','密码不能为空'),
+                        array('password','6,20','密码长度不符！',1,'length'),
+                        );
+                        $data = array();
+                        $data['email'] = I('post.email');
+                        $data['password'] = I('post.password');
+                        $User = M("member");
+                        if (!$User->validate($rules)->create($data)){
+                            $this->error($User->getError());
+                        }else{
+                                $where = array();
+                    $where['email'] = $data['email'];
+                    $result = $User->where($where)->field('id,nickname,password,email,status')->find();
+                    if(!$result){
+                        $this->error('登录失败,邮箱不存在！');
+                    }
                 /*if($result['status'] == 0){
                     $this->error('您的邮箱还未激活,请前往邮箱激活！');
                 }*/
 
-	            // 验证用户名 对比 密码
-           		if (md5($data['password']) == $result['password']) {
-	                // 存储session
-	                session('uid', $result['id']); 
-	                session('nickname', $result['nickname']);
+                    // 验证用户名 对比 密码
+                        if (md5($data['password']) == $result['password']) {
+                        // 存储session
+                        session('uid', $result['id']);
+                        session('nickname', $result['nickname']);
 
-	                // 更新用户登录信息
-	                $where['id'] = $result['id'];
-	                $data_save['ip'] = get_client_ip();
+                        // 更新用户登录信息
+                        $where['id'] = $result['id'];
+                        $data_save['ip'] = get_client_ip();
                     if($data_save['ip']){
                         $User->where($where)->save($data_save);
                     }
-	                $this->success('登录成功,正跳转至用户中心...', U('memberInfo'));
-				}else{
-					$this->error('登录失败,密码错误！');
-				}
-			}
+                        $this->success('登录成功,正跳转至用户中心...', U('memberInfo'));
+                                }else{
+                                        $this->error('登录失败,密码错误！');
+                                }
+                        }
 
-    	}else{
-    		exit("非法操作！");
-    	}
+        }else{
+                exit("非法操作！");
+        }
 
     }
 
@@ -292,11 +291,119 @@ class MemberController extends Controller {
         $this->success('正在退出登录...', U('Index/index'));
     }
 
+    /**
+     *  忘记密码，发送重置邮件
+     *   
+     */
+    public function forgetpwd(){
+        if(IS_GET){
+
+            $this->display();
+        }else if(IS_POST){
+            $email = I('post.email');
+            if(empty($email)){
+                $this->error('账号不能为空！');
+            }
+            $pattern = "/^([0-9A-Za-z\\-_\\.]+)@([0-9a-z]+\\.[a-z]{2,3}(\\.[a-z]{2})?)$/i";
+            if (!preg_match($pattern, $email)){
+                $this->error('账号格式不正确！');
+            }
+            $where['email'] = $email;
+            $field = 'id,nickname,email,password';
+            $userClass = new User();
+            $user = $userClass->getUser($where,$field);
+            if(empty($user)){
+                $this->error('该账户还没有注册！');
+            }
+            $token = md5(time().'sdc'.$user['password']);
+            $data['token_exptime'] = time()+60*20;//过期时间为10分钟后
+            $data['token'] = $token;
+            $link = U('member/resetpwd@'.$_SERVER['HTTP_HOST'],array('token'=>$token));
+
+            $l = $this->sendEmail($user['email'],' ',$link,'pwd'); //发送邮件
+            //die;
+            if($l){
+                //储存token 更新token激活时间
+                M('member')->where($where)->save($data);
+                $this->success('已发送重置密码邮件至您的邮箱，请尽快前往邮箱查看！','',3);
+            }else{
+                $this->error('邮件发送遇到未知错误！');
+            }
+
+        }else{
+            exit('非法操作！');
+        }
+        
+    }
+
+    /**
+     * 重置密码
+     *
+     */
+    public function resetpwd(){
+        if(IS_GET){
+            $urlToken = I('get.token');
+
+            if(!$urlToken){
+                exit("非法操作！");
+            }
+
+            $where['token'] = $urlToken;
+            $field = 'id,token_exptime,status';
+            $userClass = new User();
+            $user = $userClass->getUser($where,$field);
+            if(!$user){
+                $this->error('未知错误，操作失败！',U('forgetpwd'));
+            }
+            $nowTime = time();
+            if($nowTime > $user['token_exptime']){
+                $this->error('该链接有效时间已过，请重新发送邮件', U('forgetpwd'),3);
+            }else{
+                $this->assign('token',$urlToken);
+                $this->display();
+            }
+            
+        }else if(IS_POST){
+            $token = I('post.key');
+            $password = I('post.password');
+            $confpassword = I('post.confpassword');
+
+            if(!$token){
+                exit("非法操作！");
+            }
+            if(empty($password) || empty($confpassword)){
+                $this->error('请填写密码！');
+            }
+            if($password != $confpassword){
+                $this->error('两次输入的密码不一致！');
+            }
+
+            $where['token'] = $token;
+            $field = 'id,token_exptime,status';
+            $userClass = new User();
+            $user = $userClass->getUser($where,$field);
+            if(!$user){
+                $this->error('未知错误，操作失败！',U('forgetpwd'));
+            }
+
+            $b = $userClass->changeMemberData($user['id'],array('password'=>md5($password)));
+            if($b){
+                $this->success('密码重置成功！',U('Index/signin'));
+            }else{
+                $this->error('未知错误，重置失败！',U('forgetpwd'));
+            }
+
+
+        }else{
+            exit("非法操作！");
+        }
+    }
+
 
 
     /**
      *  重发邮件，激活账号
-	 * protected  
+         * protected  
      */
     public function memberRestar(){
         $userinfo = $this->checkLogin();
@@ -329,8 +436,8 @@ class MemberController extends Controller {
         }else{
             $this->error('操作失败，未知错误！',U('memberInfo'));
         }
-        
-	    
+
+
     }
 
 
@@ -349,7 +456,7 @@ class MemberController extends Controller {
             $field = 'id,token_exptime,status';
             $userClass = new User();
             $user = $userClass->getUser($where,$field);
-            
+
             if(!$user){
                 $this->error('未知错误，激活失败！',U('memberInfo'));
             }
@@ -368,9 +475,9 @@ class MemberController extends Controller {
                 }else{
                     $this->error('未知错误，激活失败！',U('memberInfo'));
                 }
-                
+
             }
-            
+
         }else{
             exit("非法操作！");
         }
@@ -434,7 +541,7 @@ class MemberController extends Controller {
             }
 
             $data = array();
-            $User = M("member"); 
+            $User = M("member");
             $transaction = M('transaction');
             $User->startTrans();
             if (!$transaction->validate($rules)->create()){
@@ -505,7 +612,7 @@ class MemberController extends Controller {
             if($user['status'] == 0){
                 $this->error('您的账号还没有激活，请前往邮箱激活！');
             }
-            
+
             //判断是否生成交割卷
             $deliveryVal = C('THINK_SDC.DELIVERY_VAL');//余额达到该值生成交割卷
             $balance = $user['balance'];
@@ -538,9 +645,9 @@ class MemberController extends Controller {
                $volumeModel->commit();
                 $return['msg'] = '交割卷已生成!';
                 $return['code'] = 1;
-                $return['data']['balance'] = $halfBalance; 
+                $return['data']['balance'] = $halfBalance;
                 $return['data']['m_balance_t'] = $m_balance_t;
-                $return['data']['volume'] = $volume; 
+                $return['data']['volume'] = $volume;
                 $this->ajaxReturn($return,'json');
                 exit;
             }else{
@@ -560,21 +667,35 @@ class MemberController extends Controller {
      *  发送邮件
      *
      */
-    protected function sendEmail($email,$nickname,$link){
+    protected function sendEmail($email,$nickname,$link,$type='up'){
+        if($type == 'up'){
+            $str =  '<p>'.$nickname.'，您好！</p>'.
+                    '<p>感谢您注册帐户！</p>'.
+                    '<p>帐户需要激活才能使用，赶紧激活成为SDC的正式一员吧:)</p>'.
+                    '<p>点击下面的链接立即激活帐户(或将网址复制到浏览器中打开):</p>'.
+                    '<a href="'.$link.'">'.$link.'</a>';
+            $subject = 'SDC-激活邮件';
+        }else if ($type == 'pwd') {
+            $str =  '<p>您好！</p>'.
+                    '<p>感谢您支持我们！</p>'.
+                    '<p>这是您的密码重置链接:)</p>'.
+                    '<p>点击下面的链接即可重置您的密码(或将网址复制到浏览器中打开):</p>'.
+                    '<a href="'.$link.'">'.$link.'</a>';
+            $subject = 'SDC-密码重置邮件';
+        }
         
-        //$link = $_SERVER['HTTP_HOST']."/home/member/activation?token={$token}";
-        $str =  '<p>您好！</p>'.
-                '<p>感谢您注册帐户！</p>'.
-                '<p>帐户需要激活才能使用，赶紧激活成为SDC的正式一员吧:)</p>'.
-                '<p>点击下面的链接立即激活帐户(或将网址复制到浏览器中打开):</p>'.
-                '<a href="'.$link.'">'.$link.'</a>';
-        
-        $subject = 'SDC-激活邮件';
+
         $fromName = 'SDC官网';
-        $result = send_email($email,$subject,$str,$fromName);//新方法
+        /****** sendCloud *******/
+        $from = 'stardiamondcoin@gmail.com';
+        $data_json = send_mail($email,$from,$fromName,$subject,$str);
+        $data = json_decode($data_json,true);
+        $result = $data['result'];
+        /**** SMTP  *****/
+        //$result = send_email($email,$subject,$str,$fromName);
         return $result;
 
     }
-    
+
 
 }
