@@ -37,7 +37,24 @@ return array(
 		'MERCHANT_ACC'	=>	'210001440011429',
 		// 商户通知地址（请根据自己的部署情况设置下面的路径）
 		//'NOTTIFY_URL'	=>	'http://'.$_SERVER['HTTP_HOST'].'/index.php/Home/pay/callback',
+	),
 
+	'BANKCODE' => array(
+		'ICBC' => '工行',
+		'ABC' => '农行',
+		'BOC' => '中行',
+		'CCB' => '建行',
+		'COMM' => '交行',
+		'CMB' => '招行',
+		'SPDB' => '浦发',
+		'CIB' => '兴业',
+		'CMBC' => '民生',
+		'GDB' => '广发',
+		'CNCB' => '中信',
+		'CEB' => '光大',
+		'HXB' => '华夏',
+		'PSBC' => '邮储',
+		'PAB' => '平安',
 	),
 );  
   

@@ -22,18 +22,24 @@ class IndexController extends Controller {
     }
     
 	public function buy(){
-        
+
         $rake_json = $this->getsdcPrice();
         $rake_arr = json_decode($rake_json,true);
         $rake_sdc = $rake_arr['assets_rake']['sdc'];
-    	$sdcPrice_sys_c = C('THINK_SDC.SDC_PRICE'); 	 //SDC购买价格
-        $sdcPrice_sys = number_format($sdcPrice_sys_c, 2, '.', '');
-        $sdcPrice = isset($rake_sdc)?$rake_sdc:$sdcPrice_sys;
-    	$ewDiscount = C('THINK_SDC.EW_DISCOUNT');//1万以上折扣
-    	$wwDiscount = C('THINK_SDC.WW_DISCOUNT');//5万以上折扣
-    	$swDiscount = C('THINK_SDC.SW_DISCOUNT');//10万以上折扣
+        //$sdcPrice_sys_c = C('THINK_SDC.SDC_PRICE');    //SDC购买价格
+        //$sdcPrice_sys = number_format($sdcPrice_sys_c, 2, '.', '');
+        $sdcPrice = isset($rake_sdc)?$rake_sdc:'';
+        $bankList = C('BANKCODE'); //银行列表
 
-    	$this->assign('sdcPrice',$sdcPrice);
+        $ewDiscount = C('THINK_SDC.EW_DISCOUNT');//1万以上折扣
+        $wwDiscount = C('THINK_SDC.WW_DISCOUNT');//5万以上折扣
+        $swDiscount = C('THINK_SDC.SW_DISCOUNT');//10万以上折扣
+
+        $this->assign('sdcPrice',$sdcPrice);
+        $this->assign('ewDiscount',$ewDiscount);
+        $this->assign('wwDiscount',$wwDiscount);
+        $this->assign('swDiscount',$swDiscount);
+        $this->assign('bankList',$bankList);
         $this->display();
     }
 

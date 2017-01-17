@@ -41,8 +41,9 @@ class OrderController extends Controller {
         $num = I('post.shop_num'); //购买数量
         $price = I('post.shop_price');//单价
         $payable = I('post.payable');//应付金额
+        $bankCode = I('post.bank');//银行
         
-        if(empty($num) || empty($price) || empty($payable)){
+        if(empty($num) || empty($price) || empty($payable) || empty($bankCode)){
             $this->error('未知错误，请重新购买！');
         }
         if($num < 100 || $num == 0){
@@ -58,18 +59,21 @@ class OrderController extends Controller {
         }
 
         $total = $price*$num;
-        if($num > 10000){
-          $total = $total*0.95;
-        }else if($num > 50000){
-          $total = $total*0.92;
-        }else if($num > 100000){
-          $total = $total*0.88;
+        //折扣
+        if($num > 10000 && $nun < 50000){
+          $total = $total*C('THINK_SDC.EW_DISCOUNT');
+        }
+        if($num > 50000 && $num < 100000){
+          $total = $total*C('THINK_SDC.WW_DISCOUNT');
+        }
+        if($num > 100000){
+          $total = $total*C('THINK_SDC.SW_DISCOUNT');
         }
         $total = number_format($total, 2, '.', '');
 
         $order = M('order');
 
-        $order->shop_name = 'SDC星钻币';
+        $order->shop_name = 'SDC';
         $order->shop_type = 'SDC'; //最大五个字符 可修改数据库
         $order->shop_num = $num;
         $order->shop_price = $price;
@@ -88,11 +92,11 @@ class OrderController extends Controller {
         // 商户订单日期
         $data['tradeDate'] = date('Ymd',$order->add_time);
         // 商户交易金额
-        $data['amt'] = 0.01;//0.01为测试  实际 $order->shop_total
+        $data['amt'] = $order->shop_total;//0.01为测试  实际 $order->shop_total
         // 商户参数
         $data['merchParam'] = 'SDCforver';//$_POST["merchParam"];
         // 商户交易摘要
-        $data['tradeSummary'] = 'SDC星钻币';//$_POST["tradeSummary"];
+        $data['tradeSummary'] = 'SDC';//$_POST["tradeSummary"];
 
         $lastId = $order->add();
         if($lastId){
@@ -109,7 +113,7 @@ class OrderController extends Controller {
             // 商户通知地址
             $data['merchUrl'] = U('order/callback@'.$_SERVER['HTTP_HOST']);//$mp['merchant_notify_url'];
             // 银行代码，不传输此参数则跳转Mo宝收银台
-            $data['bankCode'] = 'Mobaopay';
+            $data['bankCode'] = $bankCode;
             
             // 对含有中文的参数进行UTF-8编码
             // 将中文转换为UTF-8
@@ -142,7 +146,7 @@ class OrderController extends Controller {
             $sHtml.= "<script>document.forms['sdcsubmit'].submit();</script>";
             echo $sHtml;
             //$this->success('正在支付');
-            die;
+            exit;
 
             // 初始化
             //$cMbPay = new \MbPay($mp['mbp_key'], $mp['mobaopay_gateway']);
@@ -245,13 +249,13 @@ class OrderController extends Controller {
                     // 修改用户余额balance
                     $hadBalance = $user['balance'];
                     $balance = number_format($num, 2, '.', '');
-                    $balance += $hadBalance;
                     // 检查待用余额[购买大于待用余额的数量 将把待用余额加入可用余额并将待用清空] balance_e 
                     if($balance_e < $balance || $balance_e == $balance){
                         $balance += $balance_e;
                         $data_e['balance_e'] = 0;
                         $userClass->changeMemberData($user['id'],$data_e);
                     }
+                    $balance += $hadBalance;
                     $data['balance'] = $balance;
                     $b = $userClass->changeMemberData($user['id'],$data);
                     if($b){
